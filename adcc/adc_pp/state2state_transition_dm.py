@@ -464,9 +464,26 @@ def s2s_tdm_isr3(ground_state, amplitude_l, amplitude_r, intermediates):
     except ValueError:
         return dm
 
-    raise NotImplementedError(
-        "Consistent ISR(3) including triples is not implemented yet."
+    ul1, ul2, ul3 = amplitude_l.ph, amplitude_l.pphh, amplitude_l.ppphhh
+    ur1, ur2, ur3 = amplitude_r.ph, amplitude_r.pphh, amplitude_r.ppphhh
+    
+    t2_1 = ground_state.t2(b.oovv)
+
+    dm.vo += 3 * einsum("ijkabc,jkbc->ai", ul3, ur2)
+
+    dm.ov += 3 * einsum("jkbc,ijkabc->ia", ul2, ur3)
+
+    dm.oo += (
+        + 3 * einsum("ilbc,jlbc->ij", einsum("ka,iklabc->ilbc", ul1, ur3), t2_1)
+        + 3 * einsum("jlbc,ilbc->ij", einsum("jklabc,ka->jlbc", ul3, ur1), t2_1)
     )
+
+    dm.vv += (
+        + 3 * einsum("jkbc,jkac->ab", einsum("id,ijkbcd->jkbc", ul1, ur3), t2_1)
+        + 3 * einsum("ijac,ijbc->ab", einsum("ijkacd,kd->ijac", ul3, ur1), t2_1)
+    )
+
+    return dm
 
 
 # Ref: https://doi.org/10.1080/00268976.2013.859313

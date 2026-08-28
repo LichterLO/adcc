@@ -336,10 +336,27 @@ def diffdm_isr3(ground_state, amplitude, intermediates):
     except ValueError:
         return dm
 
-    raise NotImplementedError(
-        "Consistent ISR(3) including triples is not implmenetd yet."
-    )
+    ur1 = amplitude.ph 
+    ur2 = amplitude.pphh 
+    ur3 = amplitude.ppphhh   
+    t2_1 = ground_state.t2(b.oovv)
 
+    dm.ov += 3 * einsum("jkbc,ijkabc->ia", ur2, ur3)
+
+    dm.oo += (
+        + 2 * (
+            3 * einsum("ilbc,jlbc->ij", einsum("ka,iklabc->ilbc", ur1, ur3), t2_1)
+        )
+    ).symmetrise()
+
+    dm.vv += (
+        + 2 * (
+            3 * einsum("jkac,jkbc->ab", einsum("id,ijkacd->jkac", ur1, ur3), t2_1)
+        )
+    ).symmetrise()
+
+    return dm
+    
 
 # dict controlling the dispatch of the state_diffdm function
 DISPATCH = {
